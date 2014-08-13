@@ -9,7 +9,6 @@ import cpw.mods.fml.client.IModGuiFactory;
 
 public class DualHotbarGuiFactory implements IModGuiFactory
 {
-
 	@Override
 	public void initialize(Minecraft minecraftInstance) 
 	{

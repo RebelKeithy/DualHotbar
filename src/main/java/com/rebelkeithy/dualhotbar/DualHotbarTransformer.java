@@ -40,31 +40,11 @@ public class DualHotbarTransformer implements IClassTransformer
 			return patchBipush(className, "c", "(I)V", data);
 		}
 		
-		/*
-		if(className.equals("net.minecraft.client.Minecraft"))
-		{
-			System.out.println("********* INSIDE Minecraft TRANSFORMER ABOUT TO PATCH: " + className);
-			//return patchBipush(className, "func_147112_ai", "()V", data);
-		}
-		else if(className.equals("obfuscatedName"))
-		{
-			System.out.println("********* INSIDE Minecraft TRANSFORMER ABOUT TO PATCH: " + className);
-			//return patchBipush(className, "func_147112_ai", "()V", data);
-		}
-		*/
-		
 		if(className.equals("net.minecraftforge.common.ForgeHooks"))
 		{
 			System.out.println("********* INSIDE ForgeHooks TRANSFORMER ABOUT TO PATCH: " + className);
-			//return patchBipush(className, "onPickBlock", "(Lnet/minecraft/util/MovingObjectPosition;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/world/World;)Z", data);
 			return patchBipush(className, "onPickBlock", null, data);
 		}
-		/*
-		else if(className.equals("obfuscatedName"))
-		{
-			System.out.println("********* INSIDE Minecraft TRANSFORMER ABOUT TO PATCH: " + className);
-			return patchBipush(className, "onPickBlock", "(Lnet/minecraft/util/MovingObjectPosition;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/world/World;)Z", data);
-		}*/
 		
 		if(className.equals("net.minecraft.network.NetHandlerPlayServer"))
 		{
@@ -85,13 +65,6 @@ public class DualHotbarTransformer implements IClassTransformer
 		
 		return data;
 	}
-    
-    int test;
-    
-    public int test()
-    {
-    	return DualHotbarMod.hotbarSize;
-    }
 
 	private byte[] patchBipush(String className, String methodName, String methodDesc, byte[] data) 
 	{

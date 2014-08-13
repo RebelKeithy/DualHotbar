@@ -19,8 +19,6 @@ public class DualHotbarConfig
 	public static boolean doubleTap;
 	public static boolean keyCombo;
 	public static int doubleTapTime;
-
-	//public static KeyBinding keybinding;
 	
 	public static void init(File file)
 	{

@@ -22,7 +22,6 @@ public class ProxyClient extends ProxyCommon
 		inventoryChangeHandler.swapkey = new KeyBinding("Hold+Wheel to Swap Bars", Keyboard.KEY_LCONTROL, "key.categories.inventory");
 		ClientRegistry.registerKeyBinding(inventoryChangeHandler.swapkey);
 		
-		//FMLCommonHandler.instance().bus().register(renderHandler);
 		MinecraftForge.EVENT_BUS.register(renderHandler);
 		FMLCommonHandler.instance().bus().register(inventoryChangeHandler);
 	}

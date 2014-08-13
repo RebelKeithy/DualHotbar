@@ -40,11 +40,8 @@ public class InventoryChangeHandler
     public void postTickEvent(TickEvent.ClientTickEvent event)
     {    	 
     	if(event.phase == TickEvent.Phase.START)
-    	{   	
-        	if(mousePrev == -1)
-        		mousePrev = Mouse.getDWheel();
-    		
-        	
+    	{
+        	mousePrev = Mouse.getDWheel();
         	
     		if(Keyboard.isKeyDown(swapkey.getKeyCode()) && Math.abs(mousePrev - Mouse.getDWheel()) > 0)
     		{
@@ -75,8 +72,10 @@ public class InventoryChangeHandler
     			swapKeyDown = false;
     		}
     	}
+    	
     	if(event.phase == TickEvent.Phase.END)
     	{   	
+    		// If using ctrl-scroll to swap hotbars, put the players selected slot back to what it was before the scroll
     		if(slot != -1)
     		{
     			Minecraft.getMinecraft().thePlayer.inventory.currentItem = slot;
@@ -95,20 +94,21 @@ public class InventoryChangeHandler
 
             	if(Keyboard.isKeyDown(mc.gameSettings.keyBindsHotbar[j].getKeyCode()))
     			{
+            		// If using the modifier + inv key combo, we can set the inventory slot without any more checking
             		if(Keyboard.isKeyDown(selectKey.getKeyCode()))
             		{
             			Minecraft.getMinecraft().thePlayer.inventory.currentItem = j + 9;
             			continue;
             		}
             		
-            		System.out.println("test");
+            		// Only let this code run when the key is first press, not while it is being held
             		if(keyWasDown[j])
             		{
             			continue;
             		}
             		
-        			keyTimes[j] = time;
-            		
+            		// If this key is the same as the last key pressed, and the time difference was less than 900ms, and double tapping is enabled
+            		// then increment clickCount. Otherwise reset clickCount back to 0
             		if(lastKey == j && DualHotbarConfig.doubleTap && time - keyTimes[j] < 900)
             		{
             			clickCount++;
@@ -121,12 +121,14 @@ public class InventoryChangeHandler
             			clickCount = 0;
             		}
             		
+            		// If clickCount = 1 then there was a double click, since 0 was the first click
             		if(clickCount == 1)
             		{
             			Minecraft.getMinecraft().thePlayer.inventory.currentItem = j + 9;
             		}
             		
             		lastKey = j;
+        			keyTimes[j] = time;
             		keyWasDown[j] = true;
             		
             	}

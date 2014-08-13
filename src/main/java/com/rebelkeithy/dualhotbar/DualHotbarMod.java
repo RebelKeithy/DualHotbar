@@ -58,11 +58,16 @@ public class DualHotbarMod
     	FMLCommonHandler.instance().bus().register(this);
     }
     
+    @EventHandler
+    public void init(FMLInitializationEvent event)
+    {
+    	proxy.init();
+    }
+    
+    // By this point checkRemote would have been called, so we can set the hotbar size to the correct values depending on if the server has this mod
     @SubscribeEvent
     public void onConnectedToServerEvent(ClientConnectedToServerEvent event) 
     {
-    	//installedOnServer = false;
-    	
     	if(!installedOnServer)
     	{
     		hotbarSize = 9;
@@ -73,24 +78,16 @@ public class DualHotbarMod
     		hotbarSize = 18;
     		value = 27;
     	}
-    	
-    	System.out.println("Connected to server");
     }
     
+    // Assume the server doesn't have this mod installed, so installedOnServer is reset to false when leaving a server
     @SubscribeEvent
     public void onClientDisconnectionFromServerEvent(ClientDisconnectionFromServerEvent event) 
     {
     	installedOnServer = false;
-    	
-    	System.out.println("Disconected to server");
-    }
-    
-    @EventHandler
-    public void init(FMLInitializationEvent event)
-    {
-    	proxy.init();
     }
 	
+    // This is called before the ClientConnectedToServerEvent event, but this is only called on forge servers
 	@NetworkCheckHandler
 	public boolean checkRemote(Map<String,String> mods, Side remoteSide)
 	{
@@ -106,7 +103,6 @@ public class DualHotbarMod
 			}
 		}
 		return true;
-		
 	}
 	
 	@SubscribeEvent
