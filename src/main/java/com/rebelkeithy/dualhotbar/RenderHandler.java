@@ -24,8 +24,8 @@ public class RenderHandler
     private static final ResourceLocation WIDGITS = new ResourceLocation("textures/gui/widgets.png");
     
     private boolean recievedPost = true;
-    
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
+
+	@SubscribeEvent(priority = EventPriority.LOWEST)
     public void renderHotbar(RenderGameOverlayEvent.Pre event)
     {
 		if(!DualHotbarConfig.enable)
@@ -68,8 +68,8 @@ public class RenderHandler
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91, height - 22, 1, 0, 181, 22);
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91 - 1, height - 22, 20, 0, 22, 22);
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem) * 20 - 90, height - 22 - 1, 0, 22, 24, 22);
-	        	//mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem%9) * 20, height - 1 - ((inv.currentItem/9) * offset), 0, 22, 24, 1);
 	        }
+	        
 	        GL11.glDisable(GL11.GL_BLEND);
 	        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 	        RenderHelper.enableGUIStandardItemLighting();
@@ -92,7 +92,6 @@ public class RenderHandler
 	            	int z = height - 16 - 3;
 	            	renderInventorySlot(i, x, z, 1f);
 	        	}
-	            //renderInventorySlot(i, x, z, partialTicks);
 	        }
 	
 	        RenderHelper.disableStandardItemLighting();
@@ -101,8 +100,19 @@ public class RenderHandler
 	        
 	        event.setCanceled(true);
     	}
-    	else if(event.type == ElementType.CHAT || event.type == ElementType.ARMOR || event.type == ElementType.EXPERIENCE || event.type == ElementType.FOOD || event.type == ElementType.HEALTH || event.type == ElementType.HEALTHMOUNT || event.type == ElementType.JUMPBAR || event.type == ElementType.TEXT)
+    }
+
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void shiftRendererUp(RenderGameOverlayEvent.Pre event)
+    {
+		if(!DualHotbarConfig.enable)
+		{
+			return;
+		}
+		
+		if(event.type == ElementType.CHAT || event.type == ElementType.ARMOR || event.type == ElementType.EXPERIENCE || event.type == ElementType.FOOD || event.type == ElementType.HEALTH || event.type == ElementType.HEALTHMOUNT || event.type == ElementType.JUMPBAR || event.type == ElementType.TEXT)
     	{
+    		// In some cases the post render event is not received (when the pre event is cancelled by another mod), in the case, go ahead an pop the matrix before continuing
     		if(recievedPost == false && DualHotbarConfig.twoLayerRendering)
     		{
         		GL11.glPopMatrix();
@@ -117,7 +127,7 @@ public class RenderHandler
     }
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void renderHotbar(RenderGameOverlayEvent.Post event)
+    public void shiftRendererDown(RenderGameOverlayEvent.Post event)
     {
 		if(!DualHotbarConfig.enable)
 		{
@@ -131,7 +141,7 @@ public class RenderHandler
     	}
     }
 	
-	
+	// This is used by the asm transformer
 	public static void shiftUp()
 	{
 		if(!DualHotbarConfig.enable)
@@ -145,7 +155,8 @@ public class RenderHandler
 			GL11.glTranslatef(0, -20, 0);
 		}
 	}
-	
+
+	// This is used by the asm transformer
 	public static void shiftDown()
 	{
 		if(!DualHotbarConfig.enable)
