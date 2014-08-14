@@ -105,7 +105,7 @@ public class RenderHandler
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
     public void shiftRendererUp(RenderGameOverlayEvent.Pre event)
     {
-		if(!DualHotbarConfig.enable)
+		if(!DualHotbarConfig.enable || !DualHotbarConfig.twoLayerRendering)
 		{
 			return;
 		}
@@ -113,7 +113,7 @@ public class RenderHandler
 		if(event.type == ElementType.CHAT || event.type == ElementType.ARMOR || event.type == ElementType.EXPERIENCE || event.type == ElementType.FOOD || event.type == ElementType.HEALTH || event.type == ElementType.HEALTHMOUNT || event.type == ElementType.JUMPBAR || event.type == ElementType.TEXT)
     	{
     		// In some cases the post render event is not received (when the pre event is cancelled by another mod), in the case, go ahead an pop the matrix before continuing
-    		if(recievedPost == false && DualHotbarConfig.twoLayerRendering)
+    		if(recievedPost == false)
     		{
         		GL11.glPopMatrix();
     		}
@@ -121,15 +121,14 @@ public class RenderHandler
     		recievedPost = false;
     		GL11.glPushMatrix();
     		
-    		if(DualHotbarConfig.twoLayerRendering)
-    			GL11.glTranslatef(0, -20, 0);
+    		GL11.glTranslatef(0, -20, 0);
     	}
     }
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
     public void shiftRendererDown(RenderGameOverlayEvent.Post event)
     {
-		if(!DualHotbarConfig.enable)
+		if(!DualHotbarConfig.enable || !DualHotbarConfig.twoLayerRendering)
 		{
 			return;
 		}
@@ -144,30 +143,24 @@ public class RenderHandler
 	// This is used by the asm transformer
 	public static void shiftUp()
 	{
-		if(!DualHotbarConfig.enable)
+		if(!DualHotbarConfig.enable || !DualHotbarConfig.twoLayerRendering)
 		{
 			return;
 		}
 		
-		if(DualHotbarConfig.twoLayerRendering)
-		{
-			GL11.glPushMatrix();
-			GL11.glTranslatef(0, -20, 0);
-		}
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0, -20, 0);
 	}
 
 	// This is used by the asm transformer
 	public static void shiftDown()
 	{
-		if(!DualHotbarConfig.enable)
+		if(!DualHotbarConfig.enable || !DualHotbarConfig.twoLayerRendering)
 		{
 			return;
 		}
 		
-		if(DualHotbarConfig.twoLayerRendering)
-		{
-			GL11.glPopMatrix();
-		}
+		GL11.glPopMatrix();
 	}
     
     protected void renderInventorySlot(int p_73832_1_, int p_73832_2_, int p_73832_3_, float p_73832_4_)

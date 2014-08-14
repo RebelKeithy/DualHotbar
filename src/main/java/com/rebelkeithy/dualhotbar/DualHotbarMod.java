@@ -36,7 +36,7 @@ import cpw.mods.fml.relauncher.Side;
 public class DualHotbarMod
 {
     public static final String MODID = "dualhotbar";
-    public static final String VERSION = "1.5";
+    public static final String VERSION = "1.5.1";
 
 	@Instance(MODID)
 	public static DualHotbarMod instance;
