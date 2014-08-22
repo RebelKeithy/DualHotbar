@@ -26,6 +26,8 @@ public class InventoryChangeHandler
 	public static KeyBinding swapkey;
 	public int mousePrev = -1;
 	public int slot = -1;
+	
+	public int selectedItem;
 
 	public static KeyBinding selectKey;
 	public boolean swapKeyDown;
@@ -39,8 +41,19 @@ public class InventoryChangeHandler
     @SubscribeEvent
     public void postTickEvent(TickEvent.ClientTickEvent event)
     {    	 
+		if(Minecraft.getMinecraft().thePlayer == null)
+			return;
+		
     	if(event.phase == TickEvent.Phase.START)
     	{
+            for (int j = 0; j < 9; ++j)
+            {
+
+            	if(Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindsHotbar[j].getKeyCode()))
+    			{
+            		selectedItem = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
+    			}
+            }
         	mousePrev = Mouse.getDWheel();
         	
     		if(Keyboard.isKeyDown(swapkey.getKeyCode()) && Math.abs(mousePrev - Mouse.getDWheel()) > 0)
@@ -56,13 +69,68 @@ public class InventoryChangeHandler
     				int window = player.inventoryContainer.windowId;
     				
     				controller.updateController();
-    				
-    				for(int i = 9; i < 18; i++)
+
+    				System.out.println(mousePrev);
+    				if(mousePrev < 0)
+    				{
+    					if(DualHotbarConfig.twoLayerRendering)
+    					{
+		    				for(int i = 9; i < 18; i++)
+		    				{
+		    					controller.windowClick(window, i, 0, 0, player);
+		    					if(DualHotbarConfig.numHotbars > 1)
+		    						controller.windowClick(window, i+27, 0, 0, player);
+		    					if(DualHotbarConfig.numHotbars > 2)
+		    						controller.windowClick(window, i+18, 0, 0, player);
+		    					if(DualHotbarConfig.numHotbars > 3)
+		    						controller.windowClick(window, i+9, 0, 0, player);
+		    					controller.windowClick(window, i, 0, 0, player);
+		    				}
+    					}
+    					else if(DualHotbarConfig.numHotbars == 4)
+    					{
+							for(int i = 9; i < 27; i++)
+		    				{
+		    					controller.windowClick(window, i, 0, 0, player);
+		    					controller.windowClick(window, i+18, 0, 0, player);
+		    					controller.windowClick(window, i, 0, 0, player);
+		    				}
+    					}
+    				}
+    				else
+    				{
+    					if(DualHotbarConfig.twoLayerRendering)
+    					{
+    						System.out.println("test");
+		    				for(int i = 9; i < 18; i++)
+		    				{
+		    					controller.windowClick(window, i, 0, 0, player);
+		    					if(DualHotbarConfig.numHotbars > 3)
+		    						controller.windowClick(window, i+27, 0, 0, player);
+		    					if(DualHotbarConfig.numHotbars > 2)
+		    						controller.windowClick(window, i+18, 0, 0, player);
+		    					if(DualHotbarConfig.numHotbars > 1)
+		    						controller.windowClick(window, i+9, 0, 0, player);
+		    					controller.windowClick(window, i, 0, 0, player);
+		    				}
+    					} 
+    					if(DualHotbarConfig.numHotbars == 4)
+    					{
+							for(int i = 9; i < 27; i++)
+		    				{
+		    					controller.windowClick(window, i, 0, 0, player);
+		    					controller.windowClick(window, i+18, 0, 0, player);
+		    					controller.windowClick(window, i, 0, 0, player);
+		    				}
+    					}
+    				}
+    				/*
+    				for(int i = 18; i < 27; i++)
     				{
     					controller.windowClick(window, i, 0, 0, player);
-    					controller.windowClick(window, i+27, 0, 0, player);
+    					controller.windowClick(window, i+9, 0, 0, player);
     					controller.windowClick(window, i, 0, 0, player);
-    				}
+    				}*/
     				
     				slot = player.inventory.currentItem;
     			}
@@ -107,14 +175,22 @@ public class InventoryChangeHandler
             			continue;
             		}
             		
+            		for(int i = 0; i < DualHotbarConfig.numHotbars; i++)
+            		{
+            			if(selectedItem == j + i*9)
+            			{
+            				Minecraft.getMinecraft().thePlayer.inventory.currentItem = (j + 9*(i+1)) % (DualHotbarConfig.numHotbars*9);
+            			}
+            		}
+            		
             		// If this key is the same as the last key pressed, and the time difference was less than 900ms, and double tapping is enabled
             		// then increment clickCount. Otherwise reset clickCount back to 0
             		if(lastKey == j && DualHotbarConfig.doubleTap && time - keyTimes[j] < 900)
             		{
             			clickCount++;
             			
-            			if(clickCount > 1)
-            				clickCount = 0;
+            			//if(clickCount > 1)
+            			//	clickCount = 0;
             		}
             		else
             		{
@@ -122,9 +198,12 @@ public class InventoryChangeHandler
             		}
             		
             		// If clickCount = 1 then there was a double click, since 0 was the first click
-            		if(clickCount == 1)
+            		if(clickCount > 0)
             		{
-            			Minecraft.getMinecraft().thePlayer.inventory.currentItem = j + 9;
+            			//Minecraft.getMinecraft().thePlayer.inventory.currentItem = j + 9;
+                		
+    	            	//Minecraft.getMinecraft().thePlayer.inventory.currentItem = (j + 9 * (clickCount)) % (DualHotbarConfig.numHotbars*9);
+                		
             		}
             		
             		lastKey = j;

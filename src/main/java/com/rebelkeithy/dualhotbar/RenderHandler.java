@@ -1,23 +1,23 @@
 package com.rebelkeithy.dualhotbar;
 
+import java.lang.reflect.Constructor;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
-import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class RenderHandler 
 {
@@ -25,6 +25,16 @@ public class RenderHandler
     
     private boolean recievedPost = true;
 
+	private static Constructor<ScaledResolution> scaledResolution172Constructor = null;
+	static
+	{
+		try
+		{
+			scaledResolution172Constructor = ScaledResolution.class.getConstructor(GameSettings.class, int.class, int.class);
+		}
+		catch(Exception e) {}
+	}
+	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
     public void renderHotbar(RenderGameOverlayEvent.Pre event)
     {
@@ -36,8 +46,24 @@ public class RenderHandler
     	if(event.type == ElementType.HOTBAR)
     	{
 	    	Minecraft mc = Minecraft.getMinecraft();
-	
-	    	ScaledResolution res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+	    	
+	    	ScaledResolution res;
+			if (scaledResolution172Constructor != null)
+			{
+				try
+				{
+					res = scaledResolution172Constructor.newInstance(mc.gameSettings, mc.displayWidth, mc.displayHeight);
+				}
+				catch(Exception e)
+				{
+					return;
+				}
+			}
+			else
+			{
+				res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+			}
+			
 	        int width = res.getScaledWidth();
 	        int height = res.getScaledHeight();
 	        
@@ -54,11 +80,17 @@ public class RenderHandler
 	        if(DualHotbarConfig.twoLayerRendering)
 	        {
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91, height - 22, 0, 0, 182, 22);
+	        	
 	        	if(!DualHotbarMod.installedOnServer)
 	        		GL11.glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91, height - 22 - offset, 0, 0, 182, 21);
+	        	
+	        	for(int i = 1; i < DualHotbarConfig.numHotbars; i++)
+	        		mc.ingameGUI.drawTexturedModalRect(width / 2 - 91, height - 22 * i - offset + (i - 1)*2, 0, 0, 182, 21);
+	        	
 	        	if(!DualHotbarMod.installedOnServer)
 	        		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1f);
+	        	
+	        	// Draw selection square
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem%9) * 20, height - 22 - 1 - ((inv.currentItem/9) * offset), 0, 22, 24, 22);
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem%9) * 20, height - 1 - ((inv.currentItem/9) * offset), 0, 22, 24, 1);
 	        }
@@ -67,14 +99,21 @@ public class RenderHandler
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 90, height - 22, 0, 0, 182, 22);
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91, height - 22, 1, 0, 181, 22);
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91 - 1, height - 22, 20, 0, 22, 22);
-	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem) * 20 - 90, height - 22 - 1, 0, 22, 24, 22);
+	        	if(DualHotbarConfig.numHotbars == 4)
+	        	{
+		        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 90, height - 22 - offset, 0, 0, 182, 21);
+		        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91, height - 22 - offset, 1, 0, 181, 21);
+		        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91 - 1, height - 22 - offset, 20, 0, 22, 21);
+	        	}
+	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem%18) * 20 - 90, height - 22 - 1 - ((inv.currentItem/18) * offset), 0, 22, 24, 22);
+	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem%18) * 20 - 90, height - 1 - ((inv.currentItem/18) * offset), 0, 22, 24, 1);
 	        }
 	        
 	        GL11.glDisable(GL11.GL_BLEND);
 	        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 	        RenderHelper.enableGUIStandardItemLighting();
 	
-	        for (int i = 0; i < 18; ++i)
+	        for (int i = 0; i < 9 * DualHotbarConfig.numHotbars; ++i)
 	        {
 	        	if(DualHotbarConfig.twoLayerRendering)
 	        	{
@@ -88,8 +127,8 @@ public class RenderHandler
 	        	}
 	        	else
 	        	{
-	        		int x = width / 2 - 90 + (i) * 20 + 2 - 90;
-	            	int z = height - 16 - 3;
+	        		int x = width / 2 - 90 + (i%18) * 20 + 2 - 90;
+	            	int z = height - 16 - 3 - ((i/18) * offset);
 	            	renderInventorySlot(i, x, z, 1f);
 	        	}
 	        }
@@ -105,7 +144,7 @@ public class RenderHandler
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
     public void shiftRendererUp(RenderGameOverlayEvent.Pre event)
     {
-		if(!DualHotbarConfig.enable || !DualHotbarConfig.twoLayerRendering)
+		if(!DualHotbarConfig.enable || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4))
 		{
 			return;
 		}
@@ -121,14 +160,17 @@ public class RenderHandler
     		recievedPost = false;
     		GL11.glPushMatrix();
     		
-    		GL11.glTranslatef(0, -20, 0);
+    		if(DualHotbarConfig.twoLayerRendering)
+    			GL11.glTranslatef(0, -20 * (DualHotbarConfig.numHotbars - 1), 0);
+    		else
+    			GL11.glTranslatef(0, -20 * (DualHotbarConfig.numHotbars/2 - 1), 0);
     	}
     }
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
     public void shiftRendererDown(RenderGameOverlayEvent.Post event)
     {
-		if(!DualHotbarConfig.enable || !DualHotbarConfig.twoLayerRendering)
+		if(!DualHotbarConfig.enable || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4))
 		{
 			return;
 		}
@@ -143,19 +185,22 @@ public class RenderHandler
 	// This is used by the asm transformer
 	public static void shiftUp()
 	{
-		if(!DualHotbarConfig.enable || !DualHotbarConfig.twoLayerRendering)
+		if(!DualHotbarConfig.enable || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4))
 		{
 			return;
 		}
 		
 		GL11.glPushMatrix();
-		GL11.glTranslatef(0, -20, 0);
+		if(DualHotbarConfig.twoLayerRendering)
+			GL11.glTranslatef(0, -20 * (DualHotbarConfig.numHotbars - 1), 0);
+		else
+			GL11.glTranslatef(0, -20 * (DualHotbarConfig.numHotbars/2 - 1), 0);
 	}
 
 	// This is used by the asm transformer
 	public static void shiftDown()
 	{
-		if(!DualHotbarConfig.enable || !DualHotbarConfig.twoLayerRendering)
+		if(!DualHotbarConfig.enable || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4))
 		{
 			return;
 		}

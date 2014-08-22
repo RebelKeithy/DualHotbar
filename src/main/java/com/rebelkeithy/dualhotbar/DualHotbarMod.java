@@ -70,13 +70,15 @@ public class DualHotbarMod
     {
     	if(!installedOnServer)
     	{
+        	System.out.println("DualHotbars not installed on server. Disabling selecting slots");
     		hotbarSize = 9;
     		value = 36;
     	}
     	else if(DualHotbarConfig.enable)
     	{
-    		hotbarSize = 18;
-    		value = 27;
+        	System.out.println("DualHotbars installed on server. Enabling selecting slots");
+    		hotbarSize = 9 * DualHotbarConfig.numHotbars;
+    		value = 45 - 9 * DualHotbarConfig.numHotbars;
     	}
     }
     

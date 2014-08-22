@@ -24,37 +24,63 @@ public class DualHotbarTransformer implements IClassTransformer
 	@Override
 	public byte[] transform(String className, String newClassName, byte[] data) 
 	{		
-		if (className.equals("net.minecraft.entity.player.InventoryPlayer")) 
+		boolean isObfuscated = !className.equals(newClassName);
+		
+		if (newClassName.equals("net.minecraft.entity.player.InventoryPlayer")) 
 		{
 			System.out.println("********* INSIDE InventoryPlayer TRANSFORMER ABOUT TO PATCH: " + className);
-			
-			data = patchBipush(className, "getCurrentItem", "()Lnet/minecraft/item/ItemStack;", data);
-			data = patchBipush(className, "getHotbarSize", "()I", data);
-			return patchBipush(className, "changeCurrentItem", "(I)V", data);
+
+			if(!isObfuscated)
+			{
+				data = patchBipush(className, "getCurrentItem", "()Lnet/minecraft/item/ItemStack;", data);
+				data = patchBipush(className, "getHotbarSize", "()I", data);
+				return patchBipush(className, "changeCurrentItem", "(I)V", data);
+			}
+			else
+			{
+				boolean is1710 = containsMethod("h", "()add;", data);
+				
+				if(is1710)
+				{
+					data = patchBipush(className, "h", "()Ladd;", data);
+				}
+				else
+				{
+					data = patchBipush(className, "h", "()Labp;", data);
+				}
+				
+				data = patchBipush(className, "i", "()I", data);
+				return patchBipush(className, "c", "(I)V", data);
+			}
 		}
-		else if(className.equals("yx"))
+		
+		if(newClassName.equals("net.minecraft.network.NetHandlerPlayServer"))
 		{
-			System.out.println("********* INSIDE InventoryPlayer TRANSFORMER ABOUT TO PATCH: " + className);
-			data = patchBipush(className, "h", "()Ladd;", data);
-			data = patchBipush(className, "i", "()I", data);
-			return patchBipush(className, "c", "(I)V", data);
+			System.out.println("********* INSIDE NetHandlerPlayServer TRANSFORMER ABOUT TO PATCH: " + className);
+
+			if(!isObfuscated)
+			{
+				return patchBipush2(className, "processCreativeInventoryAction", "(Lnet/minecraft/network/play/client/C10PacketCreativeInventoryAction;)V", data);
+			}
+			else
+			{
+				boolean is1710 = containsMethod("a", "(Ljm;)V", data);
+				
+				if(is1710)
+				{
+					return patchBipush2(className, "a", "(Ljm;)V", data);
+				}
+				else
+				{
+					return patchBipush2(className, "a", "(Lja;)V", data);
+				}
+			}
 		}
 		
 		if(className.equals("net.minecraftforge.common.ForgeHooks"))
 		{
 			System.out.println("********* INSIDE ForgeHooks TRANSFORMER ABOUT TO PATCH: " + className);
 			return patchBipush(className, "onPickBlock", null, data);
-		}
-		
-		if(className.equals("net.minecraft.network.NetHandlerPlayServer"))
-		{
-			System.out.println("********* INSIDE NetHandlerPlayServer TRANSFORMER ABOUT TO PATCH: " + className);
-			return patchBipush2(className, "processCreativeInventoryAction", "(Lnet/minecraft/network/play/client/C10PacketCreativeInventoryAction;)V", data);
-		}
-		if(className.equals("nh"))
-		{
-			System.out.println("********* INSIDE NetHandlerPlayServer TRANSFORMER ABOUT TO PATCH: " + className);
-			return patchBipush2(className, "a", "(Ljm;)V", data);
 		}
 		
 		if(className.equals("net.minecraftforge.client.GuiIngameForge"))
@@ -98,24 +124,6 @@ public class DualHotbarTransformer implements IClassTransformer
 						methodNode.instructions.remove(insnNode);
 					}
 					insnNode = insnIter.next();
-				}
-				
-				if(className.equals("net.minecraft.client.Minecraft"))
-				{
-					insnIter = methodNode.instructions.iterator();
-					insnNode = insnIter.next();
-					
-					while(insnIter.hasNext())
-					{
-						System.out.println(insnNode);
-						
-						if(insnNode instanceof IntInsnNode)
-						{
-							System.out.println(((IntInsnNode)insnNode).operand);
-						}
-						
-						insnNode = insnIter.next();
-					}
 				}
 			}
 		}
@@ -213,5 +221,25 @@ public class DualHotbarTransformer implements IClassTransformer
 		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 		classNode.accept(writer);
 		return writer.toByteArray();
+	}
+
+	private boolean containsMethod(String methodName, String methodDesc, byte[] data) 
+	{
+		ClassNode classNode = new ClassNode();
+		ClassReader classReader = new ClassReader(data);
+		classReader.accept(classNode, 0);
+		
+		Iterator<MethodNode> iter = classNode.methods.iterator();
+		while(iter.hasNext())
+		{
+			MethodNode methodNode = iter.next();
+			
+			if(methodNode.name.equals(methodName) && methodNode.desc.equals(methodDesc))
+			{
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }
