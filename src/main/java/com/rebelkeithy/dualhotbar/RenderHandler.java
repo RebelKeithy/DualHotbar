@@ -167,7 +167,7 @@ public class RenderHandler
     	}
     }
 
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	@SubscribeEvent(priority = EventPriority.LOWEST)
     public void shiftRendererDown(RenderGameOverlayEvent.Post event)
     {
 		if(!DualHotbarConfig.enable || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4))
