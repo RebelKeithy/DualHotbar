@@ -2,22 +2,25 @@ package com.rebelkeithy.dualhotbar;
 
 import java.lang.reflect.Constructor;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+
+import com.rebelkeithy.dualhotbar.compatability.Compatability;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class RenderHandler 
 {
@@ -43,26 +46,11 @@ public class RenderHandler
 			return;
 		}
 		
-    	if(event.type == ElementType.HOTBAR)
+    	if(event.getType() == ElementType.HOTBAR)
     	{
 	    	Minecraft mc = Minecraft.getMinecraft();
-	    	
-	    	ScaledResolution res;
-			if (scaledResolution172Constructor != null)
-			{
-				try
-				{
-					res = scaledResolution172Constructor.newInstance(mc.gameSettings, mc.displayWidth, mc.displayHeight);
-				}
-				catch(Exception e)
-				{
-					return;
-				}
-			}
-			else
-			{
-				res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
-			}
+	    	float partialTicks = event.getPartialTicks();
+	    	ScaledResolution res = event.getResolution();
 			
 	        int width = res.getScaledWidth();
 	        int height = res.getScaledHeight();
@@ -75,8 +63,9 @@ public class RenderHandler
 	        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 	        mc.renderEngine.bindTexture(WIDGITS);
-	
-	        InventoryPlayer inv = mc.thePlayer.inventory;
+
+	        
+	        InventoryPlayer inv = Compatability.instance().thePlayer().inventory;
 	        if(DualHotbarConfig.twoLayerRendering)
 	        {
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91, height - 22, 0, 0, 182, 22);
@@ -98,21 +87,30 @@ public class RenderHandler
 	        {
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 90, height - 22, 0, 0, 182, 22);
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91, height - 22, 1, 0, 181, 22);
-	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91 - 1, height - 22, 20, 0, 22, 22);
+	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91 - 1, height - 22, 20, 0, 3, 22);
 	        	if(DualHotbarConfig.numHotbars == 4)
 	        	{
 		        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 90, height - 22 - offset, 0, 0, 182, 21);
 		        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91, height - 22 - offset, 1, 0, 181, 21);
-		        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91 - 1, height - 22 - offset, 20, 0, 22, 21);
+		        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 + 91 - 1, height - 22 - offset, 20, 0, 3, 21);
 	        	}
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem%18) * 20 - 90, height - 22 - 1 - ((inv.currentItem/18) * offset), 0, 22, 24, 22);
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem%18) * 20 - 90, height - 1 - ((inv.currentItem/18) * offset), 0, 22, 24, 1);
 	        }
 	        
+	        /*
 	        GL11.glDisable(GL11.GL_BLEND);
 	        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 	        RenderHelper.enableGUIStandardItemLighting();
-	
+	        */
+
+            GlStateManager.enableRescaleNormal();
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+            RenderHelper.enableGUIStandardItemLighting();
+
+            EntityPlayer entityplayer = (EntityPlayer)mc.getRenderViewEntity();
+            
 	        for (int i = 0; i < 9 * DualHotbarConfig.numHotbars; ++i)
 	        {
 	        	if(DualHotbarConfig.twoLayerRendering)
@@ -121,7 +119,8 @@ public class RenderHandler
 	            	int z = height - 16 - 3 - ((i/9) * offset);
 		        	if(!DualHotbarMod.installedOnServer)
 		        		GL11.glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-	            	renderInventorySlot(i, x, z, 1f);
+
+	                renderHotbarItem(x, z, partialTicks, entityplayer, Compatability.instance().getInSlot(entityplayer.inventory, i));
 		        	if(!DualHotbarMod.installedOnServer)
 		        		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1f);
 	        	}
@@ -129,7 +128,8 @@ public class RenderHandler
 	        	{
 	        		int x = width / 2 - 90 + (i%18) * 20 + 2 - 90;
 	            	int z = height - 16 - 3 - ((i/18) * offset);
-	            	renderInventorySlot(i, x, z, 1f);
+
+	                renderHotbarItem(x, z, partialTicks, entityplayer, Compatability.instance().getInSlot(entityplayer.inventory, i));
 	        	}
 	        }
 	
@@ -149,7 +149,7 @@ public class RenderHandler
 			return;
 		}
 		
-		if(event.type == ElementType.CHAT || event.type == ElementType.ARMOR || event.type == ElementType.EXPERIENCE || event.type == ElementType.FOOD || event.type == ElementType.HEALTH || event.type == ElementType.HEALTHMOUNT || event.type == ElementType.JUMPBAR/* || event.type == ElementType.TEXT*/)
+		if(event.getType() == ElementType.CHAT || event.getType() == ElementType.ARMOR || event.getType() == ElementType.EXPERIENCE || event.getType() == ElementType.FOOD || event.getType() == ElementType.HEALTH || event.getType() == ElementType.HEALTHMOUNT || event.getType() == ElementType.JUMPBAR || event.getType() == ElementType.AIR/* || event.type == ElementType.TEXT*/)
     	{
     		// In some cases the post render event is not received (when the pre event is cancelled by another mod), in the case, go ahead an pop the matrix before continuing
     		if(recievedPost == false)
@@ -167,7 +167,7 @@ public class RenderHandler
     	}
     }
 
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	@SubscribeEvent(priority = EventPriority.LOWEST)
     public void shiftRendererDown(RenderGameOverlayEvent.Post event)
     {
 		if(!DualHotbarConfig.enable || (!DualHotbarConfig.twoLayerRendering && DualHotbarConfig.numHotbars != 4))
@@ -175,7 +175,7 @@ public class RenderHandler
 			return;
 		}
 		
-    	if(event.type == ElementType.CHAT ||event.type == ElementType.ARMOR || event.type == ElementType.EXPERIENCE || event.type == ElementType.FOOD || event.type == ElementType.HEALTH || event.type == ElementType.HEALTHMOUNT || event.type == ElementType.JUMPBAR/* || event.type == ElementType.TEXT*/)
+    	if(event.getType() == ElementType.CHAT ||event.getType() == ElementType.ARMOR || event.getType() == ElementType.EXPERIENCE || event.getType() == ElementType.FOOD || event.getType() == ElementType.HEALTH || event.getType() == ElementType.HEALTHMOUNT || event.getType() == ElementType.JUMPBAR || event.getType() == ElementType.AIR/* || event.type == ElementType.TEXT*/)
     	{
     		recievedPost = true;
     		GL11.glPopMatrix();
@@ -207,8 +207,9 @@ public class RenderHandler
 		
 		GL11.glPopMatrix();
 	}
-    
-    protected void renderInventorySlot(int p_73832_1_, int p_73832_2_, int p_73832_3_, float p_73832_4_)
+
+	// Copied from GuiIngame.renderHotbarItem
+    protected void renderHotbarItem(int p_184044_1_, int p_184044_2_, float p_184044_3_, EntityPlayer player, ItemStack stack)
     {
 		if(!DualHotbarConfig.enable)
 		{
@@ -216,31 +217,29 @@ public class RenderHandler
 		}
 		
     	Minecraft mc = Minecraft.getMinecraft();
-    	RenderItem itemRenderer = new RenderItem();
-    	
-        ItemStack itemstack = mc.thePlayer.inventory.mainInventory[p_73832_1_];
+    	RenderItem itemRenderer = Minecraft.getMinecraft().getRenderItem();
 
-        if (itemstack != null)
+        if (!Compatability.instance().isItemStackNull(stack))
         {
-            float f1 = (float)itemstack.animationsToGo - p_73832_4_;
+            float f = Compatability.instance().animationsToGo(stack) - p_184044_3_;
 
-            if (f1 > 0.0F)
+            if (f > 0.0F)
             {
-                GL11.glPushMatrix();
-                float f2 = 1.0F + f1 / 5.0F;
-                GL11.glTranslatef((float)(p_73832_2_ + 8), (float)(p_73832_3_ + 12), 0.0F);
-                GL11.glScalef(1.0F / f2, (f2 + 1.0F) / 2.0F, 1.0F);
-                GL11.glTranslatef((float)(-(p_73832_2_ + 8)), (float)(-(p_73832_3_ + 12)), 0.0F);
+                GlStateManager.pushMatrix();
+                float f1 = 1.0F + f / 5.0F;
+                GlStateManager.translate((float)(p_184044_1_ + 8), (float)(p_184044_2_ + 12), 0.0F);
+                GlStateManager.scale(1.0F / f1, (f1 + 1.0F) / 2.0F, 1.0F);
+                GlStateManager.translate((float)(-(p_184044_1_ + 8)), (float)(-(p_184044_2_ + 12)), 0.0F);
             }
 
-            itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), itemstack, p_73832_2_, p_73832_3_);
+            itemRenderer.renderItemAndEffectIntoGUI(player, stack, p_184044_1_, p_184044_2_);
 
-            if (f1 > 0.0F)
+            if (f > 0.0F)
             {
-                GL11.glPopMatrix();
+                GlStateManager.popMatrix();
             }
 
-            itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.getTextureManager(), itemstack, p_73832_2_, p_73832_3_);
+            itemRenderer.renderItemOverlays(mc.fontRendererObj, stack, p_184044_1_, p_184044_2_);
         }
     }
 }

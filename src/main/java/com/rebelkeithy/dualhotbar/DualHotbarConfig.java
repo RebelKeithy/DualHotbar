@@ -2,12 +2,7 @@ package com.rebelkeithy.dualhotbar;
 
 import java.io.File;
 
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.config.Configuration;
-
-import org.lwjgl.input.Keyboard;
-
-import cpw.mods.fml.client.registry.ClientRegistry;
 
 
 public class DualHotbarConfig 
@@ -34,7 +29,7 @@ public class DualHotbarConfig
 	{
 		config.renameProperty("Config", "Render Two Layers", "Long Hotbar");
 		enable = config.getBoolean("Enable", "Config", true, "Enable DualHotbar");
-		twoLayerRendering = config.getBoolean("Long Hotbar", "Config", false, "If enabled, it will render all 18 slots in one row (not avaliable for 3 hotbar rows");
+		twoLayerRendering = config.getBoolean("Stacked Hotbar", "Config", true, "If disable for one long hotbar");
 		doubleTap = config.getBoolean("Enable Double Tap", "Config", true, "Double tap the inventory key to select the upper layer item");
 		keyCombo = config.getBoolean("Enable Key Combo", "Config", false, "Use key combo to select the upper layer item");
 		doubleTapTime = config.getInt("Double Tap Time", "Config", 900, 0, 2000, "Time (in milliseconds) for double tapping");

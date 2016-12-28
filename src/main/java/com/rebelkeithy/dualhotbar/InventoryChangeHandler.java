@@ -1,25 +1,17 @@
 package com.rebelkeithy.dualhotbar;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.gui.inventory.GuiInventory;
-import net.minecraft.client.multiplayer.PlayerControllerMP;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Slot;
-import net.minecraft.network.play.client.C16PacketClientStatus;
-
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
+import com.rebelkeithy.dualhotbar.compatability.Compatability;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.multiplayer.PlayerControllerMP;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.inventory.ClickType;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class InventoryChangeHandler 
 {
@@ -41,7 +33,7 @@ public class InventoryChangeHandler
     @SubscribeEvent
     public void postTickEvent(TickEvent.ClientTickEvent event)
     {    	 
-		if(Minecraft.getMinecraft().thePlayer == null)
+		if(Compatability.instance().thePlayer() == null)
 			return;
 		
     	if(event.phase == TickEvent.Phase.START)
@@ -51,49 +43,48 @@ public class InventoryChangeHandler
 
             	if(Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindsHotbar[j].getKeyCode()))
     			{
-            		selectedItem = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
+            		selectedItem = Compatability.instance().thePlayer().inventory.currentItem;
     			}
             }
         	mousePrev = Mouse.getDWheel();
         	
+        	//System.out.println("swap: " + swapkey.getKeyDescription());
     		if(Keyboard.isKeyDown(swapkey.getKeyCode()) && Math.abs(mousePrev - Mouse.getDWheel()) > 0)
     		{
     			if(swapKeyDown == false)
     			{
 	    			swapKeyDown = true;
-    				System.out.println(Mouse.getX() + " " + Mouse.getY());
 	    			Minecraft mc = Minecraft.getMinecraft();
     				PlayerControllerMP controller = Minecraft.getMinecraft().playerController;
-    				EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
+    				EntityPlayerSP player = Compatability.instance().thePlayer();
 
     				int window = player.inventoryContainer.windowId;
     				
     				controller.updateController();
 
-    				System.out.println(mousePrev);
     				if(mousePrev < 0)
     				{
     					if(DualHotbarConfig.twoLayerRendering)
     					{
-		    				for(int i = 9; i < 18; i++)
+		    				for(int i = 0; i < 9; i++)
 		    				{
-		    					controller.windowClick(window, i, 0, 0, player);
-		    					if(DualHotbarConfig.numHotbars > 1)
-		    						controller.windowClick(window, i+27, 0, 0, player);
-		    					if(DualHotbarConfig.numHotbars > 2)
-		    						controller.windowClick(window, i+18, 0, 0, player);
+		    					controller.windowClick(window, i+36, 0, ClickType.PICKUP, player);
 		    					if(DualHotbarConfig.numHotbars > 3)
-		    						controller.windowClick(window, i+9, 0, 0, player);
-		    					controller.windowClick(window, i, 0, 0, player);
+		    						controller.windowClick(window, i+27, 0, ClickType.PICKUP, player);
+		    					if(DualHotbarConfig.numHotbars > 2)
+		    						controller.windowClick(window, i+18, 0, ClickType.PICKUP, player);
+		    					if(DualHotbarConfig.numHotbars > 1)
+		    						controller.windowClick(window, i+9, 0, ClickType.PICKUP, player);
+		    					controller.windowClick(window, i+36, 0, ClickType.PICKUP, player);
 		    				}
     					}
     					else if(DualHotbarConfig.numHotbars == 4)
     					{
 							for(int i = 9; i < 27; i++)
 		    				{
-		    					controller.windowClick(window, i, 0, 0, player);
-		    					controller.windowClick(window, i+18, 0, 0, player);
-		    					controller.windowClick(window, i, 0, 0, player);
+		    					controller.windowClick(window, i, 0, ClickType.PICKUP, player);
+		    					controller.windowClick(window, i+18, 0, ClickType.PICKUP, player);
+		    					controller.windowClick(window, i, 0, ClickType.PICKUP, player);
 		    				}
     					}
     				}
@@ -101,26 +92,25 @@ public class InventoryChangeHandler
     				{
     					if(DualHotbarConfig.twoLayerRendering)
     					{
-    						System.out.println("test");
-		    				for(int i = 9; i < 18; i++)
+		    				for(int i = 0; i < 9; i++)
 		    				{
-		    					controller.windowClick(window, i, 0, 0, player);
-		    					if(DualHotbarConfig.numHotbars > 3)
-		    						controller.windowClick(window, i+27, 0, 0, player);
-		    					if(DualHotbarConfig.numHotbars > 2)
-		    						controller.windowClick(window, i+18, 0, 0, player);
+		    					controller.windowClick(window, i+36, 0, ClickType.PICKUP, player);
 		    					if(DualHotbarConfig.numHotbars > 1)
-		    						controller.windowClick(window, i+9, 0, 0, player);
-		    					controller.windowClick(window, i, 0, 0, player);
+		    						controller.windowClick(window, i+9, 0, ClickType.PICKUP, player);
+		    					if(DualHotbarConfig.numHotbars > 2)
+		    						controller.windowClick(window, i+18, 0, ClickType.PICKUP, player);
+		    					if(DualHotbarConfig.numHotbars > 3)
+		    						controller.windowClick(window, i+27, 0, ClickType.PICKUP, player);
+		    					controller.windowClick(window, i+36, 0, ClickType.PICKUP, player);
 		    				}
     					} 
-    					if(DualHotbarConfig.numHotbars == 4)
+    					else if(DualHotbarConfig.numHotbars == 4)
     					{
 							for(int i = 9; i < 27; i++)
 		    				{
-		    					controller.windowClick(window, i, 0, 0, player);
-		    					controller.windowClick(window, i+18, 0, 0, player);
-		    					controller.windowClick(window, i, 0, 0, player);
+		    					controller.windowClick(window, i, 0, ClickType.PICKUP, player);
+		    					controller.windowClick(window, i+18, 0, ClickType.PICKUP, player);
+		    					controller.windowClick(window, i, 0, ClickType.PICKUP, player);
 		    				}
     					}
     				}
@@ -146,7 +136,7 @@ public class InventoryChangeHandler
     		// If using ctrl-scroll to swap hotbars, put the players selected slot back to what it was before the scroll
     		if(slot != -1)
     		{
-    			Minecraft.getMinecraft().thePlayer.inventory.currentItem = slot;
+    			Compatability.instance().thePlayer().inventory.currentItem = slot;
     			slot = -1;
     		}
     		
@@ -165,7 +155,7 @@ public class InventoryChangeHandler
             		// If using the modifier + inv key combo, we can set the inventory slot without any more checking
             		if(Keyboard.isKeyDown(selectKey.getKeyCode()))
             		{
-            			Minecraft.getMinecraft().thePlayer.inventory.currentItem = j + 9;
+            			Compatability.instance().thePlayer().inventory.currentItem = j + 9;
             			continue;
             		}
             		
@@ -179,7 +169,7 @@ public class InventoryChangeHandler
             		{
             			if(selectedItem == j + i*9)
             			{
-            				Minecraft.getMinecraft().thePlayer.inventory.currentItem = (j + 9*(i+1)) % (DualHotbarConfig.numHotbars*9);
+            				Compatability.instance().thePlayer().inventory.currentItem = (j + 9*(i+1)) % (DualHotbarConfig.numHotbars*9);
             			}
             		}
             		

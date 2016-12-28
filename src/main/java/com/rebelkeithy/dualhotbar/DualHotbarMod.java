@@ -2,41 +2,25 @@ package com.rebelkeithy.dualhotbar;
 
 import java.util.Map;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderItem;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientConnectedToServerEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
+import net.minecraftforge.fml.common.network.NetworkCheckHandler;
+import net.minecraftforge.fml.relauncher.Side;
 
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-
-import cpw.mods.fml.client.event.ConfigChangedEvent;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
-import cpw.mods.fml.common.Mod.Instance;
-import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
-import cpw.mods.fml.common.network.FMLNetworkEvent.ClientConnectedToServerEvent;
-import cpw.mods.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
-import cpw.mods.fml.common.network.NetworkCheckHandler;
-import cpw.mods.fml.relauncher.Side;
-
-@Mod(modid = DualHotbarMod.MODID, version = DualHotbarMod.VERSION, guiFactory = "com.rebelkeithy.dualhotbar.DualHotbarGuiFactory")
+@Mod(modid = DualHotbarMod.MODID, version = DualHotbarMod.VERSION, guiFactory = "com.rebelkeithy.dualhotbar.DualHotbarGuiFactory", acceptedMinecraftVersions = "[1.10,1.12)")
 public class DualHotbarMod
 {
     public static final String MODID = "dualhotbar";
-    public static final String VERSION = "1.5.1";
+    public static final String VERSION = "1.7";
 
 	@Instance(MODID)
 	public static DualHotbarMod instance;
@@ -48,7 +32,6 @@ public class DualHotbarMod
 	public static boolean isForgeServer = false;
 	
 	public static int hotbarSize = 9;
-	public static int value = 36;
 	
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -72,13 +55,11 @@ public class DualHotbarMod
     	{
         	System.out.println("DualHotbars not installed on server. Disabling selecting slots");
     		hotbarSize = 9;
-    		value = 36;
     	}
     	else if(DualHotbarConfig.enable)
     	{
         	System.out.println("DualHotbars installed on server. Enabling selecting slots");
     		hotbarSize = 9 * DualHotbarConfig.numHotbars;
-    		value = 45 - 9 * DualHotbarConfig.numHotbars;
     	}
     }
     
@@ -110,9 +91,17 @@ public class DualHotbarMod
 	@SubscribeEvent
 	public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event)
 	{
-		if(event.modID.equals(MODID))
+		if(event.getModID().equals(MODID))
 		{
 			DualHotbarConfig.update();
 		}
+	}
+	
+	public static int inventorySlotOffset(int slot)
+	{
+		if(slot > 9)
+			return 0;
+
+		return 36;
 	}
 }

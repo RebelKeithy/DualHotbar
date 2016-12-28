@@ -2,8 +2,9 @@ package com.rebelkeithy.dualhotbar;
 
 import java.util.Map;
 
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
+@IFMLLoadingPlugin.SortingIndex(1001)
 public class DualHotbarPlugin implements IFMLLoadingPlugin
 {
 
