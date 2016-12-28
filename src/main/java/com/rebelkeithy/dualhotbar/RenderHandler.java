@@ -16,6 +16,7 @@ import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
@@ -64,7 +65,34 @@ public class RenderHandler
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 	        mc.renderEngine.bindTexture(WIDGITS);
 
+	        GL11.glPushMatrix();
+	        if(!DualHotbarConfig.twoLayerRendering)
+	        {
+	        	if(DualHotbarConfig.numHotbars == 4)
+	        		GL11.glTranslatef(0, -41, 0);
+	        	else
+	        		GL11.glTranslatef(0, -21, 0);
+	        }
 	        
+	        // Draw the offhand slot
+            EntityPlayer entityplayer = (EntityPlayer)mc.getRenderViewEntity();
+            ItemStack itemstack = entityplayer.getHeldItemOffhand();
+            EnumHandSide enumhandside = entityplayer.getPrimaryHand().opposite();
+            if (!itemstack.isEmpty())
+            {
+                if (enumhandside == EnumHandSide.LEFT)
+                {
+                	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 29, res.getScaledHeight() - 23, 24, 22, 29, 24);
+                }
+                else
+                {
+                	mc.ingameGUI.drawTexturedModalRect(width / 2 + 91, res.getScaledHeight() - 23, 53, 22, 29, 24);
+                }
+            }
+            
+            GL11.glPopMatrix();
+	        
+            // Draw the hotbar slots
 	        InventoryPlayer inv = Compatability.instance().thePlayer().inventory;
 	        if(DualHotbarConfig.twoLayerRendering)
 	        {
@@ -97,20 +125,38 @@ public class RenderHandler
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem%18) * 20 - 90, height - 22 - 1 - ((inv.currentItem/18) * offset), 0, 22, 24, 22);
 	        	mc.ingameGUI.drawTexturedModalRect(width / 2 - 91 - 1 + (inv.currentItem%18) * 20 - 90, height - 1 - ((inv.currentItem/18) * offset), 0, 22, 24, 1);
 	        }
-	        
-	        /*
-	        GL11.glDisable(GL11.GL_BLEND);
-	        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-	        RenderHelper.enableGUIStandardItemLighting();
-	        */
 
             GlStateManager.enableRescaleNormal();
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
             RenderHelper.enableGUIStandardItemLighting();
 
-            EntityPlayer entityplayer = (EntityPlayer)mc.getRenderViewEntity();
+	        GL11.glPushMatrix();
+	        if(!DualHotbarConfig.twoLayerRendering)
+	        {
+	        	if(DualHotbarConfig.numHotbars == 4)
+	        		GL11.glTranslatef(0, -41, 0);
+	        	else
+	        		GL11.glTranslatef(0, -21, 0);
+	        }
+
+            if (!itemstack.isEmpty())
+            {
+                int l1 = res.getScaledHeight() - 16 - 3;
+
+                if (enumhandside == EnumHandSide.LEFT)
+                {
+                    this.renderHotbarItem(width / 2 - 91 - 26, l1, partialTicks, entityplayer, itemstack);
+                }
+                else
+                {
+                    this.renderHotbarItem(width / 2 + 91 + 10, l1, partialTicks, entityplayer, itemstack);
+                }
+            }
             
+            GL11.glPopMatrix();
+
+	        // Draw the hotbar items
 	        for (int i = 0; i < 9 * DualHotbarConfig.numHotbars; ++i)
 	        {
 	        	if(DualHotbarConfig.twoLayerRendering)
@@ -137,6 +183,7 @@ public class RenderHandler
 	        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
 	        mc.mcProfiler.endSection();
 	        
+	        // Stop minecraft from drawing the hotbar itself
 	        event.setCanceled(true);
     	}
     }

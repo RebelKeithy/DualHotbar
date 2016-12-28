@@ -48,12 +48,10 @@ public class DualHotbarConfig
 		if(enable)
 		{
 			DualHotbarMod.hotbarSize = 18;
-			DualHotbarMod.value = 27;
 		}
 		else
 		{
 			DualHotbarMod.hotbarSize = 9;
-			DualHotbarMod.value = 36;
 		}
 		
 		config.save();
