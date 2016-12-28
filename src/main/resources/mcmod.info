@@ -2,8 +2,8 @@
 {
   "modid": "dualhotbar",
   "name": "Dual Hotbar",
-  "description": "Gives you double the hotbar space.",
-  "version": "1.11-1.7",
+  "description": "Double your hotbar space.",
+  "version": "1.11-1.7.1",
   "mcversion": "1.11",
   "url": "",
   "updateUrl": "",

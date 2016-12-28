@@ -81,7 +81,7 @@ public class RenderHandler
             EntityPlayer entityplayer = (EntityPlayer)mc.getRenderViewEntity();
             ItemStack itemstack = entityplayer.getHeldItemOffhand();
             EnumHandSide enumhandside = entityplayer.getPrimaryHand().opposite();
-            if (!itemstack.isEmpty())
+            if (Compatability.instance().isItemStackNull(itemstack))
             {
                 if (enumhandside == EnumHandSide.LEFT)
                 {
@@ -143,7 +143,7 @@ public class RenderHandler
 	        		GL11.glTranslatef(0, -21, 0);
 	        }
 
-            if (!itemstack.isEmpty())
+            if (Compatability.instance().isItemStackNull(itemstack))
             {
                 int l1 = res.getScaledHeight() - 16 - 3;
 
