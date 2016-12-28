@@ -25,6 +25,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class RenderHandler 
 {
+	public static int switchTicks = 0;
+	//public static int maxSwitchTicks = 18;
+	
     private static final ResourceLocation WIDGITS = new ResourceLocation("textures/gui/widgets.png");
     
     private boolean recievedPost = true;
@@ -166,7 +169,29 @@ public class RenderHandler
 		        	if(!DualHotbarMod.installedOnServer)
 		        		GL11.glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
 
+		        	GL11.glPushMatrix();
+		        	if(RenderHandler.switchTicks != 0)
+		        	{
+		        		float animationOffset = RenderHandler.switchTicks * 2;
+		        		
+		        		if(RenderHandler.switchTicks < 0)
+		        			animationOffset += 2;
+		        		if(RenderHandler.switchTicks > 0)
+		        			animationOffset -= 2;
+		        		
+		        		if(RenderHandler.switchTicks < 0 && i/9 == DualHotbarConfig.numHotbars - 1 && RenderHandler.switchTicks < -6)
+		        			animationOffset += 20 * DualHotbarConfig.numHotbars;
+		        		
+		        		if(RenderHandler.switchTicks > 0 && i/9 == 0 && RenderHandler.switchTicks > 6)
+		        			animationOffset -= 20 * DualHotbarConfig.numHotbars;
+		        		
+		        		GL11.glTranslatef(0, animationOffset, 0);
+		        	}
+		        	
 	                renderHotbarItem(x, z, partialTicks, entityplayer, Compatability.instance().getInSlot(entityplayer.inventory, i));
+	                
+		        	GL11.glPopMatrix();
+	                
 		        	if(!DualHotbarMod.installedOnServer)
 		        		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1f);
 	        	}
@@ -175,13 +200,40 @@ public class RenderHandler
 	        		int x = width / 2 - 90 + (i%18) * 20 + 2 - 90;
 	            	int z = height - 16 - 3 - ((i/18) * offset);
 
+		        	GL11.glPushMatrix();
+		        	if(RenderHandler.switchTicks != 0)
+		        	{
+		        		float animationOffset = RenderHandler.switchTicks * 2;
+		        		
+		        		if(RenderHandler.switchTicks < 0)
+		        			animationOffset += 2;
+		        		if(RenderHandler.switchTicks > 0)
+		        			animationOffset -= 2;
+	        		
+		        		if(RenderHandler.switchTicks < 0 && (i/9 == 2 || i/9 == 3) && RenderHandler.switchTicks < -6)
+		        			animationOffset += 20 * DualHotbarConfig.numHotbars/2;
+		        		
+		        		if(RenderHandler.switchTicks > 0 && (i/9 == 0 || i/9 == 1) && RenderHandler.switchTicks > 6)
+		        			animationOffset -= 20 * DualHotbarConfig.numHotbars/2;
+		        		
+		        		GL11.glTranslatef(0, animationOffset, 0);
+		        	}
+		        	
 	                renderHotbarItem(x, z, partialTicks, entityplayer, Compatability.instance().getInSlot(entityplayer.inventory, i));
+
+		        	GL11.glPopMatrix();
 	        	}
 	        }
 	
 	        RenderHelper.disableStandardItemLighting();
 	        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
 	        mc.mcProfiler.endSection();
+	        
+	        if(RenderHandler.switchTicks > 0)
+	        	RenderHandler.switchTicks--;
+	        if(RenderHandler.switchTicks < 0)
+	        	RenderHandler.switchTicks++;
+	        
 	        
 	        // Stop minecraft from drawing the hotbar itself
 	        event.setCanceled(true);
@@ -269,6 +321,7 @@ public class RenderHandler
         if (!Compatability.instance().isItemStackNull(stack))
         {
             float f = Compatability.instance().animationsToGo(stack) - p_184044_3_;
+            f = Math.max(f, Math.abs(RenderHandler.switchTicks/4f));
 
             if (f > 0.0F)
             {
@@ -278,6 +331,7 @@ public class RenderHandler
                 GlStateManager.scale(1.0F / f1, (f1 + 1.0F) / 2.0F, 1.0F);
                 GlStateManager.translate((float)(-(p_184044_1_ + 8)), (float)(-(p_184044_2_ + 12)), 0.0F);
             }
+            
 
             itemRenderer.renderItemAndEffectIntoGUI(player, stack, p_184044_1_, p_184044_2_);
 

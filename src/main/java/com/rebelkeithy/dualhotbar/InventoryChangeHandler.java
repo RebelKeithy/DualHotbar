@@ -64,6 +64,7 @@ public class InventoryChangeHandler
 
     				if(mousePrev < 0)
     				{
+        				RenderHandler.switchTicks = -12;
     					if(DualHotbarConfig.twoLayerRendering)
     					{
 		    				for(int i = 0; i < 9; i++)
@@ -90,6 +91,7 @@ public class InventoryChangeHandler
     				}
     				else
     				{
+        				RenderHandler.switchTicks = 12;
     					if(DualHotbarConfig.twoLayerRendering)
     					{
 		    				for(int i = 0; i < 9; i++)
