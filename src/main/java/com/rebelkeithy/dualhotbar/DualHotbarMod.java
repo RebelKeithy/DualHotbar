@@ -20,7 +20,7 @@ import net.minecraftforge.fml.relauncher.Side;
 public class DualHotbarMod
 {
     public static final String MODID = "dualhotbar";
-    public static final String VERSION = "1.7.1";
+    public static final String VERSION = "1.7.2";
 
 	@Instance(MODID)
 	public static DualHotbarMod instance;

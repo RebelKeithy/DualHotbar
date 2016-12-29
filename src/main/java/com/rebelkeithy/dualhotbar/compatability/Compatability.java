@@ -13,6 +13,8 @@ public class Compatability
 	
 	public static void init()
 	{
+		version = new CompatabilityTools11();
+		/*
 		System.out.println("MC VERSION: " + Minecraft.getMinecraft().getVersion());
 		if(Minecraft.getMinecraft().getVersion().contains("12.18"))
 		{
@@ -26,7 +28,7 @@ public class Compatability
 			version = new CompatabilityTools11();
 			return;
 		}
-		
+		*/
 	}
 	
 	public static ICompatabilityTools instance()
