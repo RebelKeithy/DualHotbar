@@ -16,9 +16,7 @@ import org.objectweb.asm.tree.VarInsnNode;
 
 import com.rebelkeithy.dualhotbar.compatability.Compatability;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.launchwrapper.IClassTransformer;
-import net.minecraftforge.common.ForgeVersion;
 
 public class DualHotbarTransformer implements IClassTransformer
 {
@@ -190,7 +188,7 @@ public class DualHotbarTransformer implements IClassTransformer
 
 				AbstractInsnNode insnNode = insnIter.next();
 
-				AbstractInsnNode newInstruction = new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rebelkeithy/dualhotbar/RenderHandler", "shiftUp", "()V");
+				AbstractInsnNode newInstruction = new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rebelkeithy/dualhotbar/RenderHandler", "shiftUp", "()V", false);
 				methodNode.instructions.insertBefore(insnNode, newInstruction);
 				
 				while(insnNode.getOpcode() != Opcodes.RETURN)
@@ -198,7 +196,7 @@ public class DualHotbarTransformer implements IClassTransformer
 					insnNode = insnIter.next();
 				}
 
-				newInstruction = new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rebelkeithy/dualhotbar/RenderHandler", "shiftDown", "()V");
+				newInstruction = new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rebelkeithy/dualhotbar/RenderHandler", "shiftDown", "()V", false);
 				methodNode.instructions.insertBefore(insnNode, newInstruction);
 			}
 		}
@@ -209,7 +207,7 @@ public class DualHotbarTransformer implements IClassTransformer
 		return writer.toByteArray();
 	}
 
-	private boolean containsMethod(String methodName, String methodDesc, byte[] data) 
+	/*private boolean containsMethod(String methodName, String methodDesc, byte[] data) 
 	{
 		ClassNode classNode = new ClassNode();
 		ClassReader classReader = new ClassReader(data);
@@ -227,5 +225,5 @@ public class DualHotbarTransformer implements IClassTransformer
 		}
 		
 		return false;
-	}
+	}*/
 }

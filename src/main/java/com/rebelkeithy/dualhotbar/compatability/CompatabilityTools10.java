@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class CompatabilityTools10 implements ICompatabilityTools

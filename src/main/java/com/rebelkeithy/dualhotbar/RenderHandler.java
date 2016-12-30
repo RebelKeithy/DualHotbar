@@ -1,7 +1,5 @@
 package com.rebelkeithy.dualhotbar;
 
-import java.lang.reflect.Constructor;
-
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -12,7 +10,6 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderItem;
-import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -31,16 +28,6 @@ public class RenderHandler
     private static final ResourceLocation WIDGITS = new ResourceLocation("textures/gui/widgets.png");
     
     private boolean recievedPost = true;
-
-	private static Constructor<ScaledResolution> scaledResolution172Constructor = null;
-	static
-	{
-		try
-		{
-			scaledResolution172Constructor = ScaledResolution.class.getConstructor(GameSettings.class, int.class, int.class);
-		}
-		catch(Exception e) {}
-	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
     public void renderHotbar(RenderGameOverlayEvent.Pre event)

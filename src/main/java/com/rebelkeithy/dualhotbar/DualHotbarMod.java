@@ -2,8 +2,8 @@ package com.rebelkeithy.dualhotbar;
 
 import java.util.Map;
 
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -38,7 +38,7 @@ public class DualHotbarMod
     {
     	DualHotbarConfig.init(event.getSuggestedConfigurationFile());
     	
-    	FMLCommonHandler.instance().bus().register(this);
+    	MinecraftForge.EVENT_BUS.register(this);
     }
     
     @EventHandler

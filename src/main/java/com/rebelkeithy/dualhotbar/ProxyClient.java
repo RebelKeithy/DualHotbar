@@ -5,7 +5,6 @@ import org.lwjgl.input.Keyboard;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class ProxyClient extends ProxyCommon
 {
@@ -15,13 +14,13 @@ public class ProxyClient extends ProxyCommon
 		RenderHandler renderHandler = new RenderHandler();
 		InventoryChangeHandler inventoryChangeHandler = new InventoryChangeHandler();
 		
-		inventoryChangeHandler.selectKey = new KeyBinding("Hold For Second 9", Keyboard.KEY_LCONTROL, "key.categories.inventory");
-		ClientRegistry.registerKeyBinding(inventoryChangeHandler.selectKey);
+		InventoryChangeHandler.selectKey = new KeyBinding("Hold For Second 9", Keyboard.KEY_LCONTROL, "key.categories.inventory");
+		ClientRegistry.registerKeyBinding(InventoryChangeHandler.selectKey);
 		
-		inventoryChangeHandler.swapkey = new KeyBinding("Hold+Wheel to Swap Bars", Keyboard.KEY_LCONTROL, "key.categories.inventory");
-		ClientRegistry.registerKeyBinding(inventoryChangeHandler.swapkey);
+		InventoryChangeHandler.swapkey = new KeyBinding("Hold+Wheel to Swap Bars", Keyboard.KEY_LCONTROL, "key.categories.inventory");
+		ClientRegistry.registerKeyBinding(InventoryChangeHandler.swapkey);
 		
 		MinecraftForge.EVENT_BUS.register(renderHandler);
-		FMLCommonHandler.instance().bus().register(inventoryChangeHandler);
+		MinecraftForge.EVENT_BUS.register(inventoryChangeHandler);
 	}
 }

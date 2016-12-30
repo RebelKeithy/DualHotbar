@@ -55,7 +55,7 @@ public class InventoryChangeHandler
     			{
 	    			swapKeyDown = true;
 	    			Minecraft mc = Minecraft.getMinecraft();
-    				PlayerControllerMP controller = Minecraft.getMinecraft().playerController;
+    				PlayerControllerMP controller =mc.playerController;
     				EntityPlayerSP player = Compatability.instance().thePlayer();
 
     				int window = player.inventoryContainer.windowId;
