@@ -1,0 +1,26 @@
+plugins {
+    // Shared setup for every target (Minecraft version + loader) of this mod: buildSrc/src/main/groovy/mod-node.gradle
+    id 'mod-node'
+}
+
+repositories {
+    maven {
+        url = 'https://maven.terraformersmc.com/releases'
+        content { includeGroup 'com.terraformersmc' }
+    }
+}
+
+dependencies {
+    // Dependencies for this mod only. Use `target_loader` and `target_minecraft` for loader- or version-specific ones.
+    if (target_loader == 'fabric') {
+        // Mod Menu, for its optional config button (fabric/DualHotbarModMenu). Players don't need it installed.
+        compileOnly("com.terraformersmc:modmenu:${modmenu_version}") { transitive = false }
+    }
+}
+
+// The Fabric-only mixin config (listed in fabric.mod.json) names classes that NeoForge jars don't contain.
+if (target_loader == 'neoforge') {
+    tasks.named('processResources') {
+        exclude("${mod_id}.fabric.mixins.json")
+    }
+}

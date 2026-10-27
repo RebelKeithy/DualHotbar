@@ -1,0 +1,22 @@
+plugins {
+    id 'groovy-gradle-plugin'
+}
+
+repositories {
+    gradlePluginPortal()
+    maven { url = 'https://maven.fabricmc.net/' }
+}
+
+dependencies {
+    // Loader plugins used by every mod through src/main/groovy/neoforge-node.gradle and fabric-node.gradle
+    implementation 'net.neoforged.moddev:net.neoforged.moddev.gradle.plugin:2.0.148'
+    implementation 'net.fabricmc.fabric-loom:net.fabricmc.fabric-loom.gradle.plugin:1.19.3'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// Unit tests for the build logic in src/main/groovy/mcmod; run with ./gradlew :buildSrc:test
+tasks.named('test') {
+    useJUnitPlatform()
+}

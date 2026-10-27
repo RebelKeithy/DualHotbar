@@ -1,0 +1,59 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+    id 'dev.kikugie.stonecutter' version '0.9.8'
+}
+
+rootProject.name = 'MCMod'
+
+// Each folder in mods/ with a gradle.properties is a mod: mods/examplemod -> project :examplemod.
+// Its `targets` line lists the <minecraft>-<loader> combinations it is built for. Each one becomes a
+// Stonecutter node project, e.g. :examplemod:26.1-neoforge in mods/examplemod/versions/26.1-neoforge,
+// using the versions in minecraft/<minecraft>.properties.
+// To start a new one: ./new-mod.sh <mod_id> "Mod Name"
+(file('mods').listFiles() ?: []).findAll { new File(it, 'gradle.properties').isFile() }.sort().each { dir ->
+    def mod = "mods/${dir.name}"
+    def props = new Properties()
+    new File(dir, 'gradle.properties').withInputStream { props.load(it) }
+    def targets = (props.getProperty('targets') ?: '').split(',')*.trim().findAll { it }
+    if (!targets) {
+        throw new GradleException("${mod}: no targets. Add a line like `targets=26.3-fabric, 26.3-neoforge` to ${mod}/gradle.properties.")
+    }
+    def nodes = targets.collect { target ->
+        def match = target =~ /^(\d+\.\d+)-(fabric|neoforge)$/
+        if (!match.matches()) {
+            throw new GradleException("${mod}: invalid target '${target}'. Targets look like 26.3-fabric: <minecraft>-<loader>, where loader is fabric or neoforge.")
+        }
+        def versions = file("minecraft/${match.group(1)}.properties")
+        if (!versions.isFile()) {
+            throw new GradleException("${mod}: target '${target}' needs minecraft/${match.group(1)}.properties, which doesn't exist.")
+        }
+        def pins = new Properties()
+        versions.withInputStream { pins.load(it) }
+        [target, pins.getProperty('minecraft_version')]
+    }
+
+    // The active version's code is what src/ contains; if its target was removed, src/ has to be re-processed.
+    def controller = new File(dir, 'stonecutter.gradle')
+    def active = controller.isFile() ? (controller.text =~ /stonecutter\.active\s*\(?\s*['"]([^'"]+)['"]/) : null
+    if (active?.find() && !(active.group(1) in targets)) {
+        throw new GradleException("${mod}: the active version '${active.group(1)}' (${mod}/stonecutter.gradle) is no longer in targets. " +
+                "Set it to one of the targets (usually the last, '${targets.last()}'), then run " +
+                "./gradlew \":${dir.name}:Refresh active project\" so src/ matches that version before building.")
+    }
+
+    include(dir.name)
+    project(":${dir.name}").projectDir = dir
+    stonecutter {
+        create(":${dir.name}") {
+            nodes.each { target, minecraftVersion -> version(target, minecraftVersion) }
+            // The last target is the version whose code is committed to git.
+            vcsVersion = targets.last()
+        }
+    }
+}

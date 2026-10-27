@@ -1,0 +1,78 @@
+// NeoForge setup for a mod node (<minecraft>-neoforge), applied by mod-node.gradle. Adapted from the NeoForge MDK.
+plugins {
+    id 'net.neoforged.moddev'
+}
+
+neoForge {
+    // Specify the version of NeoForge to use.
+    version = neo_version
+
+    // Default run configurations, shown in IntelliJ as e.g. "examplemod 26.3-neoforge - Client".
+    runs {
+        client {
+            client()
+            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        // This run config launches GameTestServer and runs all registered gametests, then exits.
+        // By default, the server will crash when no gametests are provided.
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        data {
+            clientData()
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', new File(project.stonecutter_main_dir, 'resources').getAbsolutePath()
+        }
+
+        // applies to all the run configs above
+        configureEach {
+            ideName = project.run_display_name(name)
+            // "SCAN": For mods scan. "REGISTRIES": For firing of registry events. "REGISTRYDUMP": For getting the contents of all registries.
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        // define mod <-> source bindings; these tell the game which sources are for which mod
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+// Sets up a dependency configuration called 'localRuntime'.
+// Use it instead of 'runtimeOnly' for dependencies that should be present when testing
+// in-game but not pulled by dependents of the mod.
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+// NeoForge reads access transformers, so the shared class tweaker is converted into META-INF/accesstransformer.cfg.
+if (project.class_tweaker.isFile()) {
+    var classTweaker = project.class_tweaker
+    var accessTransformer = layout.buildDirectory.file('generated/accesstransformer/META-INF/accesstransformer.cfg')
+    var generateAccessTransformer = tasks.register('generateAccessTransformer') {
+        inputs.file(classTweaker)
+        outputs.file(accessTransformer)
+        doLast {
+            accessTransformer.get().asFile.text = mcmod.AccessWidenerToAt.convert(classTweaker.readLines()).join('\n') + '\n'
+        }
+    }
+    sourceSets.main.resources.srcDir(files(layout.buildDirectory.dir('generated/accesstransformer')).builtBy(generateAccessTransformer))
+    tasks.named('processResources') { dependsOn generateAccessTransformer }
+    neoForge.accessTransformers.from(files(accessTransformer).builtBy(generateAccessTransformer))
+}
+
+// To avoid having to run "generateModMetadata" (mod-node.gradle) manually, make it run on every project reload
+neoForge.ideSyncTask tasks.named('generateModMetadata')

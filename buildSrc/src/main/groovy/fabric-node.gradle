@@ -1,0 +1,48 @@
+// Fabric setup for a mod node (<minecraft>-fabric), applied by mod-node.gradle. Adapted from Fabric's example mod.
+// Minecraft 26.x is unobfuscated, so there are no mappings and dependencies use `implementation`.
+plugins {
+    id 'net.fabricmc.fabric-loom'
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    // Fabric API is a required dependency of every Fabric jar; players install it alongside the mod.
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+}
+
+loom {
+    if (project.class_tweaker.isFile()) {
+        accessWidenerPath = project.class_tweaker
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+
+    // Default run configurations, shown in IntelliJ as e.g. "examplemod 26.3-fabric - Client".
+    runs {
+        configureEach {
+            ideConfigGenerated true
+            configName = project.run_display_name(name)
+            // The name already says which mod and target it is; don't append the Gradle project path.
+            appendProjectPathToDisplayName = false
+        }
+    }
+}
+
+// Data generation through Fabric API's "fabric-datagen" entrypoint, written to this node's src/generated/resources.
+fabricApi {
+    configureDataGeneration {
+        client = true
+        modId = mod_id
+        outputDirectory = file('src/generated/resources')
+    }
+}
+
+// Fabric API names its data generation run "Data Generation"; use the same naming as the other runs.
+afterEvaluate {
+    loom.runs.named('datagen') { configName = project.run_display_name('datagen') }
+}
