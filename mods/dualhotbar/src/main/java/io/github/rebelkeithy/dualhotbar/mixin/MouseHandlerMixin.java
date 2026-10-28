@@ -16,7 +16,8 @@ import org.spongepowered.asm.mixin.injection.At;
 // so both directions arrive here. As in vanilla, a negative wheel value is scrolling down (the direction that selects
 // the next slot). Scroll steps that arrive while a swap is still animating are dropped (HotbarSwapper.swap), so a
 // fast stream of steps can't stack up swaps. Without the modifier, scrolling can also move the selection past the end
-// of one bar onto the other (SecondBarSelection).
+// of one bar onto the other, or, while a second-bar slot is held and it can't, along the second bar
+// (SecondBarSelection).
 @Mixin(MouseHandler.class)
 public abstract class MouseHandlerMixin {
     @WrapOperation(
@@ -25,12 +26,16 @@ public abstract class MouseHandlerMixin {
     )
     private int dualhotbar$swapOnShiftScroll(double wheel, int currentSelected, int limit, Operation<Integer> original) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (DualHotbarConfig.scrollToSwap() && DualHotbarKeys.scrollModifierDown()) {
+        // In Long Hotbar the bars don't swap, so scrolling with the modifier held just moves the selection.
+        if (DualHotbarConfig.scrollToSwap() && DualHotbarKeys.scrollModifierDown() && !DualHotbarConfig.longHotbarInUse()) {
             HotbarSwapper.swap(minecraft, wheel < 0);
             return currentSelected;
         }
         if (SecondBarSelection.scrollsPastEdge()) {
             return SecondBarSelection.scroll(minecraft, wheel, currentSelected);
+        }
+        if (SecondBarSelection.selectedColumn() >= 0) {
+            return SecondBarSelection.scrollSecondBar(minecraft, wheel, currentSelected);
         }
         SecondBarSelection.release(minecraft);
         return original.call(wheel, currentSelected, limit);

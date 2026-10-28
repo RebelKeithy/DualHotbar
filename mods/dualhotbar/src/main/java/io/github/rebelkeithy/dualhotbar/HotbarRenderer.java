@@ -27,6 +27,11 @@ public final class HotbarRenderer {
     private static final Identifier HOTBAR_ATTACK_INDICATOR_PROGRESS_SPRITE = Identifier.withDefaultNamespace("hud/hotbar_attack_indicator_progress");
     private static final int BAR_WIDTH = 182;
     private static final int BAR_HEIGHT = 22;
+    private static final int SLOT_WIDTH = 20;
+    private static final int SLOTS = Inventory.getSelectionSize();
+    // The Long Hotbar: 18 slots between the two outer borders, and the room kept beside it for the offhand slot.
+    private static final int LONG_BAR_WIDTH = 2 * SLOTS * SLOT_WIDTH + 2;
+    private static final int OFFHAND_ROOM = 31;
     // Mid-swap, the bars' centres are at least a hotbar height apart (each moves half a hotbar height off the middle),
     // even when they rest on top of each other.
     private static final float MIN_LIFT = BAR_HEIGHT / 2.0F;
@@ -42,6 +47,10 @@ public final class HotbarRenderer {
         if (!(minecraft.getCameraEntity() instanceof Player player)) {
             return;
         }
+        if (DualHotbarConfig.longHotbarInUse()) {
+            extractLongHotbar(graphics, deltaTracker, minecraft, player);
+            return;
+        }
 
         float secondScale = DualHotbarConfig.secondHotbarScale();
         float hotbarCenter = BAR_HEIGHT / 2.0F;
@@ -53,7 +62,8 @@ public final class HotbarRenderer {
         Placement hotbarPlacement = place(graphics, minecraft, hotbar);
         Placement secondPlacement = place(graphics, minecraft, second);
 
-        extractOffhandAndAttackIndicator(graphics, deltaTracker, minecraft, player);
+        int screenCenter = graphics.guiWidth() / 2;
+        extractOffhandAndAttackIndicator(graphics, deltaTracker, minecraft, player, screenCenter - BAR_WIDTH / 2, screenCenter + BAR_WIDTH / 2);
         // The selection frame goes on the bar the held item is shown in: the hotbar's is part of the hotbar, as in
         // vanilla, and the second bar's is drawn last, over the hotbar, so it isn't cut off where the rest of the
         // second bar is.
@@ -79,11 +89,48 @@ public final class HotbarRenderer {
         }
     }
 
+    // Long Hotbar: the hotbar and the second bar side by side as one 18-slot bar, the hotbar on the left, at full
+    // size unless the screen is too narrow, with room for the offhand slot either side. Nothing sits above it, so the
+    // HUD stays at vanilla's height. Selection works as in the stacked bars (SecondBarSelection); the frame is simply
+    // on whichever of the 18 slots is selected. The bars don't swap in this mode (HotbarSwapper), so it behaves like a
+    // plain 18-slot hotbar.
+    private static void extractLongHotbar(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, Minecraft minecraft, Player player) {
+        int guiScale = minecraft.getWindow().getGuiScale();
+        float scale = Math.min(1.0F, (graphics.guiWidth() - 2.0F * OFFHAND_ROOM) / LONG_BAR_WIDTH);
+        float left = snap(graphics.guiWidth() / 2.0F - LONG_BAR_WIDTH * scale / 2.0F, guiScale);
+        float top = snap(graphics.guiHeight() - BAR_HEIGHT * scale, guiScale);
+        extractOffhandAndAttackIndicator(graphics, deltaTracker, minecraft, player, Mth.floor(left), Mth.ceil(left + LONG_BAR_WIDTH * scale));
+
+        Inventory inventory = player.getInventory();
+        int secondColumn = SecondBarSelection.selectedColumn();
+        int frameSlot = secondColumn >= 0 ? SLOTS + secondColumn : inventory.getSelectedSlot();
+        inBar(graphics, new Placement(left, top, scale), () -> {
+            extractLongBarSprite(graphics);
+            extractSelectionFrame(graphics, frameSlot);
+            for (int slot = 0; slot < 2 * SLOTS; slot++) {
+                boolean secondBar = slot >= SLOTS;
+                int column = slot % SLOTS;
+                ItemStack itemStack = inventory.getItem(SecondBarSelection.displaySlot(secondBar, column));
+                extractSlot(graphics, deltaTracker, minecraft, player, itemStack, 3 + slot * SLOT_WIDTH, 3, (secondBar ? SECOND_BAR_SEED : 1) + column);
+            }
+        });
+    }
+
+    // The 18-slot bar, built from pieces of the 9-slot sprite so every join is an ordinary divider between slots: its
+    // left border and first 9 slots, an inner slot again for slot 10, then its last 8 slots and right border.
+    private static void extractLongBarSprite(GuiGraphicsExtractor graphics) {
+        int nineSlots = SLOTS * SLOT_WIDTH;
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HOTBAR_SPRITE, BAR_WIDTH, BAR_HEIGHT, 0, 0, 0, 0, nineSlots, BAR_HEIGHT);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HOTBAR_SPRITE, BAR_WIDTH, BAR_HEIGHT, SLOT_WIDTH, 0, nineSlots, 0, SLOT_WIDTH, BAR_HEIGHT);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HOTBAR_SPRITE, BAR_WIDTH, BAR_HEIGHT, SLOT_WIDTH, 0, nineSlots + SLOT_WIDTH, 0,
+                BAR_WIDTH - SLOT_WIDTH, BAR_HEIGHT);
+    }
+
     // How far the HUD elements stacked on the hotbar move up to make room for the second bar. 0 in spectator mode,
-    // which shows the spectator menu instead of the hotbars.
+    // which shows the spectator menu instead of the hotbars, and for the Long Hotbar, which has nothing above it.
     public static int decorationShift() {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.gameMode == null || minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR) {
+        if (minecraft.gameMode == null || minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR || DualHotbarConfig.longHotbarInUse()) {
             return 0;
         }
         float secondScale = DualHotbarConfig.secondHotbarScale();
@@ -175,26 +222,28 @@ public final class HotbarRenderer {
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HOTBAR_SELECTION_SPRITE, -1 + column * 20, -1, 24, 23);
     }
 
-    // The offhand slot and attack indicator stay at vanilla's positions and size while the bars swap.
-    private static void extractOffhandAndAttackIndicator(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, Minecraft minecraft, Player player) {
-        int screenCenter = graphics.guiWidth() / 2;
+    // The offhand slot and attack indicator, beside the hotbar's left and right edges (barLeft, barRight) as in
+    // vanilla. They stay put while the bars swap.
+    private static void extractOffhandAndAttackIndicator(
+            GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, Minecraft minecraft, Player player, int barLeft, int barRight
+    ) {
         int bottom = graphics.guiHeight();
         ItemStack offhand = player.getOffhandItem();
         HumanoidArm offhandArm = player.getMainArm().getOpposite();
         if (!offhand.isEmpty()) {
             if (offhandArm == HumanoidArm.LEFT) {
-                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HOTBAR_OFFHAND_LEFT_SPRITE, screenCenter - 91 - 29, bottom - 23, 29, 24);
-                extractSlot(graphics, deltaTracker, minecraft, player, offhand, screenCenter - 91 - 26, bottom - 16 - 3, OFFHAND_SEED);
+                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HOTBAR_OFFHAND_LEFT_SPRITE, barLeft - 29, bottom - 23, 29, 24);
+                extractSlot(graphics, deltaTracker, minecraft, player, offhand, barLeft - 26, bottom - 16 - 3, OFFHAND_SEED);
             } else {
-                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HOTBAR_OFFHAND_RIGHT_SPRITE, screenCenter + 91, bottom - 23, 29, 24);
-                extractSlot(graphics, deltaTracker, minecraft, player, offhand, screenCenter + 91 + 10, bottom - 16 - 3, OFFHAND_SEED);
+                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HOTBAR_OFFHAND_RIGHT_SPRITE, barRight, bottom - 23, 29, 24);
+                extractSlot(graphics, deltaTracker, minecraft, player, offhand, barRight + 10, bottom - 16 - 3, OFFHAND_SEED);
             }
         }
 
         if (minecraft.player != null && minecraft.options.attackIndicator().get() == AttackIndicatorStatus.HOTBAR) {
             float attackStrengthScale = minecraft.player.getAttackStrengthScale(0.0F);
             if (attackStrengthScale < 1.0F) {
-                int x = offhandArm == HumanoidArm.RIGHT ? screenCenter - 91 - 22 : screenCenter + 91 + 6;
+                int x = offhandArm == HumanoidArm.RIGHT ? barLeft - 22 : barRight + 6;
                 int y = bottom - 20;
                 int progress = (int) (attackStrengthScale * 19.0F);
                 graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HOTBAR_ATTACK_INDICATOR_BACKGROUND_SPRITE, x, y, 18, 18);

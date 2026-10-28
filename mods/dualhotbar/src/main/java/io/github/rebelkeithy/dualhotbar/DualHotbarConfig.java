@@ -20,6 +20,7 @@ public final class DualHotbarConfig {
     public static final boolean DEFAULT_SELECTABLE_SECOND_BAR = false;
     public static final boolean DEFAULT_SCROLL_PAST_EDGE = true;
     public static final boolean DEFAULT_DOUBLE_TAP_NUMBER_KEYS = true;
+    public static final boolean DEFAULT_LONG_HOTBAR = false;
     private static final long CHECK_INTERVAL_NANOS = 1_000_000_000L;
 
     private static float secondHotbarScale = DEFAULT_SCALE;
@@ -29,6 +30,7 @@ public final class DualHotbarConfig {
     private static boolean selectableSecondBar = DEFAULT_SELECTABLE_SECOND_BAR;
     private static boolean scrollPastEdge = DEFAULT_SCROLL_PAST_EDGE;
     private static boolean doubleTapNumberKeys = DEFAULT_DOUBLE_TAP_NUMBER_KEYS;
+    private static boolean longHotbar = DEFAULT_LONG_HOTBAR;
     private static long loadedModifiedTime = Long.MIN_VALUE;
     private static long nextCheck = System.nanoTime();
     private static boolean checked;
@@ -102,6 +104,21 @@ public final class DualHotbarConfig {
         doubleTapNumberKeys = enabled;
     }
 
+    // The Long Hotbar setting itself; see longHotbarInUse().
+    public static boolean longHotbar() {
+        reloadIfChanged();
+        return longHotbar;
+    }
+
+    public static void setLongHotbar(boolean enabled) {
+        longHotbar = enabled;
+    }
+
+    // Whether the two bars are drawn side by side as one 18-slot hotbar. Needs the second bar to be selectable.
+    public static boolean longHotbarInUse() {
+        return selectableSecondBar() && longHotbar();
+    }
+
     // Writes the current settings to the file.
     public static void save() {
         Path file = file();
@@ -143,8 +160,10 @@ public final class DualHotbarConfig {
                 scrollPastEdge=%s
                 # With the above: pressing a number key twice quickly selects that slot of the second hotbar.
                 doubleTapNumberKeys=%s
+                # With the above: draw the hotbar and second hotbar side by side as one 18-slot hotbar.
+                longHotbar=%s
                 """.formatted(secondHotbarScale, MAX_OVERLAP, secondHotbarOverlap, MAX_ANIMATION_MILLIS, swapAnimationMillis, scrollToSwap,
-                selectableSecondBar, scrollPastEdge, doubleTapNumberKeys);
+                selectableSecondBar, scrollPastEdge, doubleTapNumberKeys, longHotbar);
     }
 
     private static void reloadIfChanged() {
@@ -177,6 +196,7 @@ public final class DualHotbarConfig {
             setSelectableSecondBar(readBoolean(properties, "selectableSecondHotbar", DEFAULT_SELECTABLE_SECOND_BAR));
             setScrollPastEdge(readBoolean(properties, "scrollPastEdge", DEFAULT_SCROLL_PAST_EDGE));
             setDoubleTapNumberKeys(readBoolean(properties, "doubleTapNumberKeys", DEFAULT_DOUBLE_TAP_NUMBER_KEYS));
+            setLongHotbar(readBoolean(properties, "longHotbar", DEFAULT_LONG_HOTBAR));
         } catch (IOException e) {
             DualHotbar.LOGGER.warn("Couldn't read {}; using the current settings", file, e);
         }

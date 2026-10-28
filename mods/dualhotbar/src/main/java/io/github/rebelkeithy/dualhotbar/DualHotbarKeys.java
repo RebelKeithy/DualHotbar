@@ -13,6 +13,7 @@ public final class DualHotbarKeys {
 
     private static KeyMapping swap;
     private static KeyMapping scrollModifier;
+    private static KeyMapping secondBarModifier;
     private static KeyMapping openSettings;
 
     private DualHotbarKeys() {
@@ -22,13 +23,20 @@ public final class DualHotbarKeys {
         swap = new KeyMapping("key.dualhotbar.swap", InputConstants.UNKNOWN.getValue(), category);
         // Shares Left Shift with Sneak by default; both loaders let two mappings use the same key.
         scrollModifier = new KeyMapping("key.dualhotbar.scrollModifier", InputConstants.KEY_LSHIFT, category);
+        // Shares Left Control with Sprint by default, the same way.
+        secondBarModifier = new KeyMapping("key.dualhotbar.secondBarModifier", InputConstants.KEY_LCONTROL, category);
         openSettings = new KeyMapping("key.dualhotbar.settings", InputConstants.UNKNOWN.getValue(), category);
-        return List.of(swap, scrollModifier, openSettings);
+        return List.of(swap, scrollModifier, secondBarModifier, openSettings);
     }
 
     // Held while scrolling to swap the hotbars.
     public static boolean scrollModifierDown() {
         return scrollModifier != null && scrollModifier.isDown();
+    }
+
+    // Held while pressing a number key to select that slot of the second bar.
+    public static boolean secondBarModifierDown() {
+        return secondBarModifier != null && secondBarModifier.isDown();
     }
 
     // Called by each loader at the end of every client tick. Presses only count while no screen is open.

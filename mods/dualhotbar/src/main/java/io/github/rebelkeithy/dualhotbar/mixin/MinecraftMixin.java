@@ -8,7 +8,8 @@ import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-// Number keys: vanilla selects hotbar slot N; a quick second press of the same key selects second-bar slot N instead.
+// Number keys: vanilla selects hotbar slot N; with the Second Bar Modifier key held, or on a quick second press of the
+// same key, second-bar slot N is selected instead.
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
     @WrapOperation(

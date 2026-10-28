@@ -63,9 +63,21 @@ public final class SecondBarSelection {
         return next;
     }
 
-    // A number key was pressed for hotbar slot `slot`. Pressing it twice quickly selects that column of the second
-    // bar, and returns true so vanilla's own selection is skipped; otherwise the hotbar slot is selected as usual.
+    // One scroll step along the second bar alone, round from one end to the other, while one of its columns is held
+    // and scrolling doesn't move between the bars. Returns the hotbar slot vanilla should select.
+    public static int scrollSecondBar(Minecraft minecraft, double wheel, int currentSelected) {
+        int next = Math.floorMod(column - (int) Math.signum(wheel), Inventory.getSelectionSize());
+        return selectSecond(minecraft, next) ? next : currentSelected;
+    }
+
+    // A number key was pressed for hotbar slot `slot`. Pressing it with the Second Bar Modifier key held (Ctrl by
+    // default), or twice quickly, selects that column of the second bar, and returns true so vanilla's own selection
+    // is skipped; otherwise the hotbar slot is selected as usual.
     public static boolean onNumberKey(Minecraft minecraft, int slot) {
+        if (DualHotbarConfig.selectableSecondBar() && DualHotbarKeys.secondBarModifierDown()) {
+            lastTapSlot = -1;
+            return selectSecond(minecraft, slot);
+        }
         long now = System.nanoTime();
         boolean doubleTap = slot == lastTapSlot && now - lastTapNanos < DOUBLE_TAP_NANOS;
         lastTapSlot = doubleTap ? -1 : slot;
@@ -77,8 +89,10 @@ public final class SecondBarSelection {
         return false;
     }
 
+    // Scrolling walks both bars as one ring when Scroll Past Edge is on, and always in Long Hotbar, where the two
+    // bars are one row.
     public static boolean scrollsPastEdge() {
-        return DualHotbarConfig.selectableSecondBar() && DualHotbarConfig.scrollPastEdge();
+        return DualHotbarConfig.selectableSecondBar() && (DualHotbarConfig.scrollPastEdge() || DualHotbarConfig.longHotbar());
     }
 
     // Holds the item in second-bar column `barColumn`. Returns false when that isn't possible right now.

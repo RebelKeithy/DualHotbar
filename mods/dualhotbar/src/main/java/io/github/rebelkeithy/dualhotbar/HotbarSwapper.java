@@ -14,11 +14,12 @@ public final class HotbarSwapper {
     // that pressing a number key over an inventory slot sends. The server stays in charge of the inventory, so this
     // works on servers without the mod, and the client predicts the result so the new items show at once.
     // wheelDown picks which way the swap animation turns. Returns false when no swap is possible right now, including
-    // while the previous swap is still animating.
+    // while the previous swap is still animating, and always in Long Hotbar, which is one 18-slot bar with nothing to
+    // swap.
     public static boolean swap(Minecraft minecraft, boolean wheelDown) {
         LocalPlayer player = minecraft.player;
         MultiPlayerGameMode gameMode = minecraft.gameMode;
-        if (SwapAnimation.isAnimating() || player == null || gameMode == null || player.isSpectator()
+        if (DualHotbarConfig.longHotbarInUse() || SwapAnimation.isAnimating() || player == null || gameMode == null || player.isSpectator()
                 || player.containerMenu != player.inventoryMenu) {
             return false;
         }
